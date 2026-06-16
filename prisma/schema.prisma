@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  role          Role      @default(FREE)
+  monthlyLimit  Int       @default(3)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  resumes       Resume[]
+  coverLetters  CoverLetter[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  usageLogs     UsageLog[]
+}
+
+enum Role {
+  FREE
+  PRO
+  ADMIN
+}
+
+model Resume {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  content     Json
+  atsScore    Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  scans       ResumeScan[]
+}
+
+model ResumeScan {
+  id          String   @id @default(uuid())
+  resumeId    String
+  resume      Resume   @relation(fields: [resumeId], references: [id])
+  score       Int
+  feedback    Json
+  createdAt   DateTime @default(now())
+}
+
+model CoverLetter {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  content     String
+  targetRole  String?
+  targetCompany String?
+  createdAt   DateTime @default(now())
+}
+
+model Subscription {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  planId      String
+  status      String
+  currentPeriodEnd DateTime
+  createdAt   DateTime @default(now())
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  amount      Int
+  currency    String
+  status      String
+  createdAt   DateTime @default(now())
+}
+
+model UsageLog {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String   // e.g., 'resume_scan', 'cover_letter'
+  tokensUsed  Int      @default(0)
+  cost        Float    @default(0)
+  createdAt   DateTime @default(now())
+}
